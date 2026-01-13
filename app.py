@@ -29,6 +29,7 @@ def mine():
         'proof': block['proof'],
         'previous_hash': block['previous_hash']
     }
+
     return jsonify(response), 200
 
 @app.route('/transactions/new', methods=["POST"])
@@ -49,6 +50,35 @@ def full_chain():
     response = {
         'chain': blockchain.chain,
         'length': len(blockchain.chain)
+    }
+
+    return jsonify(response), 200
+
+@app.route('/nodes/register', methods=["POST"])
+def register_nodes():
+    values = request.get_json()
+    nodes = values.get('nodes')
+
+    if nodes is None:
+        return "Error. Please provide a list of valid nodes", 400
+    
+    for node in nodes:
+        blockchain.register_node(node)
+
+    response = {
+        'message': "New nodes have been added",
+        'all_nodes': list(blockchain.nodes)
+    }
+
+    return jsonify(response), 201
+
+@app.route('/nodes/resolve', methods=["GET"])
+def resolve_conflict():
+    replaced = blockchain.resolve_conflicts()
+
+    response = {
+        'message': "Our chain was replaced" if replaced else "Our chain is authorative",
+        'chain': blockchain.chain
     }
 
     return jsonify(response), 200
